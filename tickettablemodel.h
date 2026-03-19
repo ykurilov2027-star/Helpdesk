@@ -7,10 +7,8 @@
 
 class TicketTableModel : public QAbstractTableModel {
     Q_OBJECT
-
 public:
     enum Column { IdCol, TitleCol, PriorityCol, StatusCol, CreatedAtCol, ColCount };
-
     explicit TicketTableModel(QObject* parent = nullptr);
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
@@ -22,6 +20,10 @@ public:
     void updateTicket(int row, const Ticket& ticket);
     void removeTicket(int row);
     Ticket getTicket(int row) const;
+
+    void setTickets(const QVector<Ticket> &tickets);
+    QVector<Ticket> getAllTickets() const;
+    int getNextId() const;
 
 private:
     QVector<Ticket> tickets_;

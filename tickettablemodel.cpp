@@ -55,6 +55,18 @@ void TicketTableModel::removeTicket(int row) {
     endRemoveRows();
 }
 
-Ticket TicketTableModel::getTicket(int row) const {
-    return tickets_.at(row);
+Ticket TicketTableModel::getTicket(int row) const { return tickets_.at(row); }
+
+void TicketTableModel::setTickets(const QVector<Ticket> &tickets) {
+    beginResetModel();
+    tickets_ = tickets;
+    endResetModel();
+}
+
+QVector<Ticket> TicketTableModel::getAllTickets() const { return tickets_; }
+
+int TicketTableModel::getNextId() const {
+    int maxId = 0;
+    for (const auto &t : tickets_) if (t.id > maxId) maxId = t.id;
+    return maxId + 1;
 }

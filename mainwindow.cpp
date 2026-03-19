@@ -1,16 +1,19 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "ticketdialog.h"
+#include "ticketrepository.h"
 #include <QDateTime>
 #include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
+
     model = new TicketTableModel(this);
     ui->tableView->setModel(model);
-    ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+
+    TicketRepository repo("tickets.csv");
+    model->setTickets(repo.load());
 
     connect(ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
     connect(ui->actionNew, &QAction::triggered, this, &MainWindow::onActionNew);
@@ -20,22 +23,20 @@ MainWindow::MainWindow(QWidget *parent)
     updateActions();
 }
 
-MainWindow::~MainWindow() { delete ui; }
-
-void MainWindow::updateActions() {
-    bool hasSelection = ui->tableView->selectionModel()->hasSelection();
-    ui->actionEdit->setEnabled(hasSelection);
-    ui->actionDelete->setEnabled(hasSelection);
-    ui->actionView->setEnabled(hasSelection);
+MainWindow::~MainWindow() {
+    TicketRepository repo("tickets.csv");
+    repo.save(model->getAllTickets());
+    delete ui;
 }
 
 void MainWindow::onActionNew() {
     TicketDialog dlg(TicketDialog::Mode::New, this);
     if (dlg.exec() == QDialog::Accepted) {
         Ticket t = dlg.getTicket();
-        t.id = model->rowCount() + 1;
+        t.id = model->getNextId();
         t.createdAt = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm");
         model->addTicket(t);
+        TicketRepository("tickets.csv").save(model->getAllTickets());
     }
 }
 
@@ -50,6 +51,16 @@ void MainWindow::onActionEdit() {
         updated.id = t.id;
         updated.createdAt = t.createdAt;
         model->updateTicket(idx.row(), updated);
+        TicketRepository("tickets.csv").save(model->getAllTickets());
+    }
+}
+
+void MainWindow::onActionDelete() {
+    QModelIndex idx = ui->tableView->currentIndex();
+    if (!idx.isValid()) return;
+    if (QMessageBox::question(this, "Confirm", "Delete ticket?") == QMessageBox::Yes) {
+        model->removeTicket(idx.row());
+        TicketRepository("tickets.csv").save(model->getAllTickets());
     }
 }
 
@@ -61,17 +72,9 @@ void MainWindow::onActionView() {
     dlg.exec();
 }
 
-void MainWindow::onActionDelete() {
-    QModelIndex idx = ui->tableView->currentIndex();
-    if (!idx.isValid()) return;
-
-    Ticket t = model->getTicket(idx.row());
-    auto result = QMessageBox::question(this, "Confirm Delete",
-                                        QString("Are you sure you want to delete ticket #%1: %2?")
-                                            .arg(t.id).arg(t.title),
-                                        QMessageBox::Yes | QMessageBox::No);
-
-    if (result == QMessageBox::Yes) {
-        model->removeTicket(idx.row());
-    }
+void MainWindow::updateActions() {
+    bool hasSelection = ui->tableView->selectionModel()->hasSelection();
+    ui->actionEdit->setEnabled(hasSelection);
+    ui->actionDelete->setEnabled(hasSelection);
+    ui->actionView->setEnabled(hasSelection);
 }
