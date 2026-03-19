@@ -19,11 +19,13 @@ public:
 
 private slots:
     void onEditClicked();
+    void validateForm();
 
 private:
     Ui::TicketDialog *ui;
     Mode currentMode;
     void applyMode();
+    bool isValid() const;
 };
 
 #endif

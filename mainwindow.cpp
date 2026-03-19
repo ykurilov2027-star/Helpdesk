@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "ticketdialog.h"
 #include <QDateTime>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
@@ -62,5 +63,15 @@ void MainWindow::onActionView() {
 
 void MainWindow::onActionDelete() {
     QModelIndex idx = ui->tableView->currentIndex();
-    if (idx.isValid()) model->removeTicket(idx.row());
+    if (!idx.isValid()) return;
+
+    Ticket t = model->getTicket(idx.row());
+    auto result = QMessageBox::question(this, "Confirm Delete",
+                                        QString("Are you sure you want to delete ticket #%1: %2?")
+                                            .arg(t.id).arg(t.title),
+                                        QMessageBox::Yes | QMessageBox::No);
+
+    if (result == QMessageBox::Yes) {
+        model->removeTicket(idx.row());
+    }
 }
