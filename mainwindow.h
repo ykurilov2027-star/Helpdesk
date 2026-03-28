@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QSortFilterProxyModel>
 #include "tickettablemodel.h"
 
 QT_BEGIN_NAMESPACE
@@ -20,11 +21,16 @@ private slots:
     void onActionEdit();
     void onActionDelete();
     void onActionView();
+    void onTableDoubleClicked(const QModelIndex &index);
+    void onSearchTextChanged(const QString &text);
+    void onStatusFilterChanged(const QString &status);
     void updateActions();
 
 private:
     Ui::MainWindow *ui;
     TicketTableModel *model;
+    QSortFilterProxyModel *proxyModel;
+    void setupTableView();
 };
 
 #endif
